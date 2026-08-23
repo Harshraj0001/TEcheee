@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Add Device | IoT Platform</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>➕ Add New IoT Device</h1>
+
+    <p>
+        Add a device to your IoT dashboard.
+    </p>
+
+    <br><br>
+
+    <form method="POST">
+
+        <label>
+            <strong>Device Name</strong>
+        </label>
+
+        <input
+            type="text"
+            name="name"
+            placeholder="Example: Living Room ESP32"
+            required
+        >
+
+
+        <label>
+            <strong>Device Type</strong>
+        </label>
+
+        <select
+            name="device_type"
+            required
+        >
+
+            <option value="">
+                Select Device Type
+            </option>
+
+            <option value="ESP32">
+                ESP32
+            </option>
+
+            <option value="Arduino">
+                Arduino
+            </option>
+
+            <option value="Raspberry Pi">
+                Raspberry Pi
+            </option>
+
+            <option value="Smart Light">
+                Smart Light
+            </option>
+
+            <option value="Smart Fan">
+                Smart Fan
+            </option>
+
+            <option value="Temperature Sensor">
+                Temperature Sensor
+            </option>
+
+            <option value="Humidity Sensor">
+                Humidity Sensor
+            </option>
+
+            <option value="Custom Device">
+                Custom Device
+            </option>
+
+        </select>
+
+
+        <label>
+            <strong>Device ID</strong>
+        </label>
+
+        <input
+            type="text"
+            name="device_id"
+            placeholder="Example: ESP32_001"
+            required
+        >
+
+
+        <button type="submit">
+            ➕ Add Device
+        </button>
+
+    </form>
+
+
+    <br><br>
+
+
+    <a href="{{ url_for('dashboard') }}">
+
+        <button>
+            ← Back to Dashboard
+        </button>
+
+    </a>
+
+</div>
+
+</body>
+
+</html>

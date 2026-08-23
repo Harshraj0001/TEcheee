@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Login | IoT Platform</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="auth-container">
+
+        <div class="auth-card">
+
+            <h1>🔐 Welcome Back</h1>
+
+            <p class="auth-subtitle">
+                Login to your IoT Platform
+            </p>
+
+
+            <!-- FLASH MESSAGES -->
+
+            {% with messages = get_flashed_messages() %}
+
+                {% if messages %}
+
+                    {% for message in messages %}
+
+                        <div class="flash-message">
+
+                            {{ message }}
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <form method="POST">
+
+                <label>
+                    <strong>Email</strong>
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+
+                <label>
+                    <strong>Password</strong>
+                </label>
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+
+                <button type="submit">
+                    Login →
+                </button>
+
+            </form>
+
+
+            <p class="auth-footer">
+
+                Don't have an account?
+
+                <a href="{{ url_for('register') }}">
+
+                    Create Account
+
+                </a>
+
+            </p>
+
+
+            <br>
+
+            <a href="{{ url_for('home') }}">
+
+                ← Back to Home
+
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

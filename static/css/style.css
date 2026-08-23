@@ -1,0 +1,653 @@
+/* =========================
+   GLOBAL SETTINGS
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    color: #333;
+}
+
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 40px auto;
+}
+
+
+/* =========================
+   HEADINGS
+========================= */
+
+h1 {
+    margin-bottom: 10px;
+}
+
+h2 {
+    margin-bottom: 15px;
+}
+
+
+/* =========================
+   DASHBOARD CARDS
+========================= */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(200px, 1fr));
+
+    gap: 20px;
+
+    margin-top: 30px;
+}
+
+
+.card {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 10px
+        rgba(0, 0, 0, 0.08);
+
+    text-align: center;
+}
+
+
+.card h3 {
+    margin-bottom: 10px;
+
+    font-size: 16px;
+
+    color: #666;
+}
+
+
+.card p {
+    font-size: 32px;
+
+    font-weight: bold;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+button {
+    padding: 10px 18px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    background: #2563eb;
+
+    color: white;
+
+    transition: 0.3s;
+}
+
+
+button:hover {
+    background: #1d4ed8;
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================
+   LINKS
+========================= */
+
+a {
+    text-decoration: none;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.status-online {
+    color: green;
+
+    font-weight: bold;
+}
+
+
+.status-offline {
+    color: red;
+
+    font-weight: bold;
+}
+
+
+/* =========================
+   FORMS
+========================= */
+
+form {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 10px;
+
+    max-width: 500px;
+
+    box-shadow:
+        0 4px 10px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+input,
+select {
+    width: 100%;
+
+    padding: 10px;
+
+    margin-top: 5px;
+
+    margin-bottom: 15px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 6px;
+}
+
+
+/* =========================
+   TABLES
+========================= */
+
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    background: white;
+
+    margin-top: 20px;
+
+    box-shadow:
+        0 4px 10px
+        rgba(0, 0, 0, 0.05);
+}
+
+
+th {
+    background: #2563eb;
+
+    color: white;
+}
+
+
+th,
+td {
+    padding: 12px;
+
+    text-align: left;
+
+    border-bottom: 1px solid #ddd;
+}
+
+
+/* =========================
+   RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 600px) {
+
+    .container {
+        width: 95%;
+
+        margin: 20px auto;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    button {
+        width: 100%;
+
+        margin-bottom: 10px;
+    }
+
+}
+/* =========================
+   AUTHENTICATION PAGES
+========================= */
+
+.auth-container {
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+}
+
+
+.auth-card {
+    background: white;
+
+    width: 100%;
+
+    max-width: 450px;
+
+    padding: 40px;
+
+    border-radius: 15px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.1);
+
+    text-align: center;
+}
+
+
+.auth-card h1 {
+    margin-bottom: 10px;
+}
+
+
+.auth-subtitle {
+    color: #666;
+
+    margin-bottom: 25px;
+}
+
+
+.auth-card form {
+    background: transparent;
+
+    padding: 0;
+
+    max-width: none;
+
+    box-shadow: none;
+
+    text-align: left;
+}
+
+
+.auth-card button {
+    width: 100%;
+
+    margin-top: 10px;
+}
+
+
+.auth-footer {
+    margin-top: 20px;
+}
+
+
+.auth-footer a {
+    color: #2563eb;
+
+    font-weight: bold;
+}
+
+
+.flash-message {
+    background: #e0f2fe;
+
+    padding: 12px;
+
+    margin-bottom: 20px;
+
+    border-radius: 6px;
+}
+/* =========================
+   HOME PAGE
+========================= */
+
+.home-container {
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+}
+
+
+.home-card {
+    width: 100%;
+
+    max-width: 700px;
+
+    background: white;
+
+    padding: 50px;
+
+    border-radius: 20px;
+
+    text-align: center;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.1);
+}
+
+
+.home-icon {
+    font-size: 60px;
+
+    margin-bottom: 15px;
+}
+
+
+.home-card h1 {
+    font-size: 42px;
+
+    margin-bottom: 15px;
+}
+
+
+.home-subtitle {
+    font-size: 18px;
+
+    color: #666;
+
+    max-width: 500px;
+
+    margin: auto;
+
+    line-height: 1.6;
+}
+
+
+.home-features {
+    display: grid;
+
+    grid-template-columns:
+        repeat(auto-fit, minmax(150px, 1fr));
+
+    gap: 15px;
+
+    margin: 35px 0;
+}
+
+
+.home-features div {
+    background: #f4f7fb;
+
+    padding: 20px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    font-size: 16px;
+}
+
+
+.home-buttons {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+}
+
+
+.secondary-button {
+    background: #64748b;
+}
+
+
+.secondary-button:hover {
+    background: #475569;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+    .home-card {
+        padding: 30px 20px;
+    }
+
+    .home-card h1 {
+        font-size: 32px;
+    }
+
+    .home-buttons {
+        flex-direction: column;
+    }
+
+    .home-buttons a {
+        width: 100%;
+    }
+
+    .home-buttons button {
+        width: 100%;
+    }
+
+}
+/* =========================
+   SENSOR HISTORY
+========================= */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.device-summary {
+    text-align: left;
+}
+
+.device-summary p {
+    font-size: 16px;
+    margin-top: 10px;
+    font-weight: normal;
+}
+/* =========================
+   SENSOR CHARTS
+========================= */
+
+.chart-card {
+    background: white;
+
+    padding: 25px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 10px
+        rgba(0, 0, 0, 0.08);
+
+    height: 400px;
+}
+
+.chart-card h2 {
+    margin-bottom: 20px;
+}
+/* =========================
+   FINAL UI POLISH
+========================= */
+
+/* Smooth page appearance */
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+/* Better spacing */
+
+.container {
+    padding-bottom: 40px;
+}
+
+
+/* Better cards */
+
+.card,
+.chart-card {
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.card:hover,
+.chart-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 8px 20px
+        rgba(0, 0, 0, 0.12);
+}
+
+
+/* Better buttons */
+
+button {
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+button:hover {
+    box-shadow:
+        0 4px 10px
+        rgba(0, 0, 0, 0.15);
+}
+
+
+/* Better links */
+
+a {
+    transition: 0.2s;
+}
+
+
+a:hover {
+    opacity: 0.85;
+}
+
+
+/* Flash messages */
+
+.flash-message {
+    border-left: 4px solid #2563eb;
+
+    margin-top: 15px;
+
+    text-align: left;
+}
+
+
+/* Better tables */
+
+table tr {
+    transition: background 0.2s ease;
+}
+
+
+tbody tr:hover {
+    background: #f8fafc;
+}
+
+
+/* Better status badges */
+
+.status-online,
+.status-offline {
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    display: inline-block;
+
+    font-size: 14px;
+}
+
+
+.status-online {
+    background: #dcfce7;
+}
+
+
+.status-offline {
+    background: #fee2e2;
+}
+
+
+/* Responsive tables */
+
+@media (max-width: 700px) {
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    table {
+        min-width: 650px;
+    }
+
+}
+
+
+/* Mobile spacing */
+
+@media (max-width: 600px) {
+
+    h1 {
+        font-size: 28px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .card,
+    .chart-card {
+        padding: 20px;
+    }
+
+}

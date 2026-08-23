@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dashboard | IoT Platform</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>
+            Welcome, {{ user.username }} 👋
+        </h1>
+
+        <p>
+            Monitor and control your IoT devices from one place.
+        </p>
+
+
+        <!-- DASHBOARD CARDS -->
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>
+                    📱 Total Devices
+                </h3>
+
+                <p>
+                    {{ total_devices }}
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>
+                    🟢 Online Devices
+                </h3>
+
+                <p>
+                    {{ online_devices }}
+                </p>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>
+                    🔴 Offline Devices
+                </h3>
+
+                <p>
+                    {{ offline_devices }}
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <br><br>
+
+
+        <!-- ACTION BUTTONS -->
+
+        <a href="{{ url_for('add_device') }}">
+
+            <button>
+                ➕ Add Device
+            </button>
+
+        </a>
+
+
+        <a href="{{ url_for('devices') }}">
+
+            <button>
+                📱 My Devices
+            </button>
+
+        </a>
+
+
+        <a href="{{ url_for('logout') }}">
+
+            <button>
+                🚪 Logout
+            </button>
+
+        </a>
+
+
+    </div>
+
+</body>
+
+</html>

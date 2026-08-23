@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sensor Charts | IoT Platform</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📈 Sensor Charts</h1>
+
+    <p>
+        Visual analysis of your IoT device sensor data.
+    </p>
+
+    <br>
+
+
+    <!-- DEVICE INFORMATION -->
+
+    <div class="card device-summary">
+
+        <h2>{{ device.name }}</h2>
+
+        <p>
+            <strong>Device Type:</strong>
+            {{ device.device_type }}
+        </p>
+
+        <p>
+            <strong>Device ID:</strong>
+            {{ device.device_id }}
+        </p>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- TEMPERATURE -->
+
+    <div class="chart-card">
+
+        <h2>🌡 Temperature</h2>
+
+        <canvas id="temperatureChart"></canvas>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- HUMIDITY -->
+
+    <div class="chart-card">
+
+        <h2>💧 Humidity</h2>
+
+        <canvas id="humidityChart"></canvas>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- VOLTAGE -->
+
+    <div class="chart-card">
+
+        <h2>⚡ Voltage</h2>
+
+        <canvas id="voltageChart"></canvas>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- BATTERY -->
+
+    <div class="chart-card">
+
+        <h2>🔋 Battery</h2>
+
+        <canvas id="batteryChart"></canvas>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- NAVIGATION -->
+
+    <a href="{{ url_for('sensor_history', device_id=device.id) }}">
+
+        <button>
+            📜 Sensor History
+        </button>
+
+    </a>
+
+
+    <a href="{{ url_for('device_details', device_id=device.id) }}">
+
+        <button>
+            ← Back to Device
+        </button>
+
+    </a>
+
+</div>
+
+
+<script>
+
+const timestamps = {{ timestamps | tojson }};
+
+const temperatures = {{ temperatures | tojson }};
+const humidities = {{ humidities | tojson }};
+const voltages = {{ voltages | tojson }};
+const batteries = {{ batteries | tojson }};
+
+
+function createChart(canvasId, label, data) {
+
+    new Chart(
+
+        document.getElementById(canvasId),
+
+        {
+
+            type: "line",
+
+            data: {
+
+                labels: timestamps,
+
+                datasets: [{
+
+                    label: label,
+
+                    data: data,
+
+                    borderWidth: 2,
+
+                    tension: 0.3
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false
+
+            }
+
+        }
+
+    );
+
+}
+
+
+createChart(
+    "temperatureChart",
+    "Temperature (°C)",
+    temperatures
+);
+
+
+createChart(
+    "humidityChart",
+    "Humidity (%)",
+    humidities
+);
+
+
+createChart(
+    "voltageChart",
+    "Voltage (V)",
+    voltages
+);
+
+
+createChart(
+    "batteryChart",
+    "Battery (%)",
+    batteries
+);
+
+</script>
+
+</body>
+
+</html>

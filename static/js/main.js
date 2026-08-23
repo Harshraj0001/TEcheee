@@ -1,0 +1,1 @@
+console.log("IoT Platform Loaded Successfully!");

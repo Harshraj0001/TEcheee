@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sensor History | IoT Platform</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📜 Sensor History</h1>
+
+    <p>
+        View historical sensor readings for your device.
+    </p>
+
+    <br>
+
+
+    <!-- DEVICE INFORMATION -->
+
+    <div class="card device-summary">
+
+        <h2>
+            {{ device.name }}
+        </h2>
+
+        <p>
+            <strong>Device Type:</strong>
+            {{ device.device_type }}
+        </p>
+
+        <p>
+            <strong>Device ID:</strong>
+            {{ device.device_id }}
+        </p>
+
+    </div>
+
+
+    <br><br>
+
+
+    <!-- SENSOR DATA TABLE -->
+
+    {% if sensor_data %}
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Timestamp</th>
+
+                        <th>🌡 Temperature (°C)</th>
+
+                        <th>💧 Humidity (%)</th>
+
+                        <th>⚡ Voltage (V)</th>
+
+                        <th>🔋 Battery (%)</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for data in sensor_data %}
+
+                        <tr>
+
+                            <td>
+                                {{ data.timestamp }}
+                            </td>
+
+                            <td>
+                                {{ data.temperature }}
+                            </td>
+
+                            <td>
+                                {{ data.humidity }}
+                            </td>
+
+                            <td>
+                                {{ data.voltage }}
+                            </td>
+
+                            <td>
+                                {{ data.battery }}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <div class="card">
+
+            <h3>⚠ No Sensor History</h3>
+
+            <p>
+                No sensor data has been received for this device yet.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+    <br><br>
+
+
+    <!-- ACTION BUTTONS -->
+
+    <a
+        href="{{ url_for(
+            'sensor_charts',
+            device_id=device.id
+        ) }}"
+    >
+        <button>
+            📈 View Sensor Charts
+        </button>
+    </a>
+
+
+    <a
+        href="{{ url_for(
+            'device_details',
+            device_id=device.id
+        ) }}"
+    >
+        <button>
+            ← Back to Device
+        </button>
+    </a>
+
+</div>
+
+</body>
+
+</html>
