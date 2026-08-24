@@ -25,6 +25,18 @@ class User(db.Model, UserMixin):
         nullable=False
     )
 
+    is_admin = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+
+    is_active = db.Column(
+        db.Boolean,
+        default=True,
+        nullable=False
+   )
+
     devices = db.relationship(
         "Device",
         backref="owner",

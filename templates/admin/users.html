@@ -1,0 +1,383 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+Manage Users
+{% endblock %}
+
+{% block page_title %}
+User Management
+{% endblock %}
+
+{% block content %}
+
+<!-- Search & Filter Section -->
+<div class="stat-card">
+
+    <h2>Search & Filter Users</h2>
+
+    <br>
+
+    <form method="GET"
+          action="{{ url_for('admin_users') }}"
+          class="filter-form">
+
+        <!-- Search -->
+        <input
+            type="text"
+            name="search"
+            placeholder="Search username or email..."
+            value="{{ search }}"
+        >
+
+        <!-- Role Filter -->
+        <select name="role">
+
+            <option value="">
+                All Roles
+            </option>
+
+            <option
+                value="admin"
+                {% if role == "admin" %}selected{% endif %}
+            >
+                Admin
+            </option>
+
+            <option
+                value="user"
+                {% if role == "user" %}selected{% endif %}
+            >
+                User
+            </option>
+
+        </select>
+
+        <!-- Status Filter -->
+        <select name="status">
+
+            <option value="">
+                All Status
+            </option>
+
+            <option
+                value="active"
+                {% if status == "active" %}selected{% endif %}
+            >
+                Active
+            </option>
+
+            <option
+                value="blocked"
+                {% if status == "blocked" %}selected{% endif %}
+            >
+                Blocked
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Search
+        </button>
+
+        <a href="{{ url_for('admin_users') }}">
+            <button type="button">
+                Reset
+            </button>
+        </a>
+
+    </form>
+
+</div>
+
+
+<br>
+
+
+<!-- Users Table -->
+<div class="stat-card">
+
+    <h2>Registered Users</h2>
+
+    <br>
+
+    <div style="overflow-x: auto;">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in users.items %}
+
+                <tr>
+
+                    <td>{{ user.id }}</td>
+
+                    <td>{{ user.username }}</td>
+
+                    <td>{{ user.email }}</td>
+
+
+                    <!-- Role -->
+                    <td>
+
+                        {% if user.is_admin %}
+                            <strong>Admin</strong>
+                        {% else %}
+                            User
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- Status -->
+                    <td>
+
+                        {% if user.is_active %}
+
+                            <span class="status-online">
+                                Active
+                            </span>
+
+                        {% else %}
+
+                            <span class="status-offline">
+                                Blocked
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- Actions -->
+                    <td>
+
+                        {% if user.id != current_user.id %}
+
+                            <!-- Make / Remove Admin -->
+                            {% if user.is_admin %}
+
+                            <form
+                                action="{{ url_for(
+                                    'remove_admin',
+                                    user_id=user.id
+                                ) }}"
+                                method="POST"
+                                style="display: inline;"
+                            >
+
+                                <button type="submit">
+                                    Remove Admin
+                                </button>
+
+                            </form>
+
+                            {% else %}
+
+                            <form
+                                action="{{ url_for(
+                                    'make_admin',
+                                    user_id=user.id
+                                ) }}"
+                                method="POST"
+                                style="display: inline;"
+                            >
+
+                                <button type="submit">
+                                    Make Admin
+                                </button>
+
+                            </form>
+
+                            {% endif %}
+
+
+                            <!-- Block / Unblock -->
+                            {% if user.is_active %}
+
+                            <form
+                                action="{{ url_for(
+                                    'block_user',
+                                    user_id=user.id
+                                ) }}"
+                                method="POST"
+                                style="display: inline;"
+                            >
+
+                                <button type="submit">
+                                    Block
+                                </button>
+
+                            </form>
+
+                            {% else %}
+
+                            <form
+                                action="{{ url_for(
+                                    'unblock_user',
+                                    user_id=user.id
+                                ) }}"
+                                method="POST"
+                                style="display: inline;"
+                            >
+
+                                <button type="submit">
+                                    Unblock
+                                </button>
+
+                            </form>
+
+                            {% endif %}
+
+
+                            <!-- Delete User -->
+                            <form
+                                action="{{ url_for(
+                                    'admin_delete_user',
+                                    user_id=user.id
+                                ) }}"
+                                method="POST"
+                                style="display: inline;"
+                                onsubmit="return confirm('Are you sure you want to delete this user?');"
+                            >
+
+                                <button type="submit">
+                                    Delete
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <strong>You</strong>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="6">
+                        No users found.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Pagination -->
+    {% if users.pages > 1 %}
+
+    <div class="pagination">
+
+        <!-- Previous Button -->
+        {% if users.has_prev %}
+
+        <a href="{{ url_for(
+            'admin_users',
+            page=users.prev_num,
+            search=search,
+            role=role,
+            status=status
+        ) }}">
+
+            <button type="button">
+                ← Previous
+            </button>
+
+        </a>
+
+        {% endif %}
+
+
+        <!-- Page Numbers -->
+        {% for page_num in users.iter_pages() %}
+
+            {% if page_num %}
+
+                {% if page_num == users.page %}
+
+                    <button
+                        type="button"
+                        class="active-page"
+                    >
+                        {{ page_num }}
+                    </button>
+
+                {% else %}
+
+                    <a href="{{ url_for(
+                        'admin_users',
+                        page=page_num,
+                        search=search,
+                        role=role,
+                        status=status
+                    ) }}">
+
+                        <button type="button">
+                            {{ page_num }}
+                        </button>
+
+                    </a>
+
+                {% endif %}
+
+            {% else %}
+
+                <span class="pagination-dots">
+                    ...
+                </span>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        <!-- Next Button -->
+        {% if users.has_next %}
+
+        <a href="{{ url_for(
+            'admin_users',
+            page=users.next_num,
+            search=search,
+            role=role,
+            status=status
+        ) }}">
+
+            <button type="button">
+                Next →
+            </button>
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_migrate import Migrate
 import secrets
 from flask_login import (
     LoginManager,
@@ -35,6 +36,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize database
 db.init_app(app)
+
+# Initialize database migrations
+migrate = Migrate(app, db)
 
 
 # Initialize login manager
@@ -487,13 +491,413 @@ def send_device_command(device_id):
         "message": "Command sent successfully",
         "command": command
     }
-@app.route("/api/device/<int:device_id>/command")
+
+@app.route("/admin")
+@login_required
+def admin_dashboard():
+
+    # Allow only administrators
+    if not current_user.is_admin:
+        flash("Access denied. Admin privileges required.")
+        return redirect(url_for("dashboard"))
+
+    total_users = User.query.count()
+
+    total_devices = Device.query.count()
+
+    online_devices = Device.query.filter_by(
+        status="Online"
+    ).count()
+
+    total_sensor_readings = SensorData.query.count()
+
+    return render_template(
+        "admin/dashboard.html",
+        total_users=total_users,
+        total_devices=total_devices,
+        online_devices=online_devices,
+        total_sensor_readings=total_sensor_readings
+    )
+
+@app.route("/admin/users")
+@login_required
+def admin_users():
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    # Get search and filter values
+    search = request.args.get("search", "").strip()
+    role = request.args.get("role", "")
+    status = request.args.get("status", "")
+
+    # Get current page
+    page = request.args.get(
+        "page",
+        1,
+        type=int
+    )
+
+    # Users per page
+    per_page = 10
+
+    # Start query
+    query = User.query
+
+    # Search
+    if search:
+        query = query.filter(
+            db.or_(
+                User.username.ilike(f"%{search}%"),
+                User.email.ilike(f"%{search}%")
+            )
+        )
+
+    # Role filter
+    if role == "admin":
+        query = query.filter_by(
+            is_admin=True
+        )
+
+    elif role == "user":
+        query = query.filter_by(
+            is_admin=False
+        )
+
+    # Status filter
+    if status == "active":
+        query = query.filter_by(
+            is_active=True
+        )
+
+    elif status == "blocked":
+        query = query.filter_by(
+            is_active=False
+        )
+
+    # Pagination
+    users = query.order_by(
+        User.id.desc()
+    ).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
+
+    return render_template(
+        "admin/users.html",
+        users=users,
+        search=search,
+        role=role,
+        status=status
+    )
+
+@app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
+
+@login_required
+def admin_delete_user(user_id):
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    user = User.query.get_or_404(user_id)
+
+    # Prevent admin from deleting their own account
+    if user.id == current_user.id:
+        flash("You cannot delete your own admin account.")
+        return redirect(url_for("admin_users"))
+
+    db.session.delete(user)
+    db.session.commit()
+
+    flash("User deleted successfully.")
+
+    return redirect(url_for("admin_users"))
+
+@app.route("/admin/user/<int:user_id>/toggle-admin", methods=["POST"])
+@login_required
+def admin_toggle_role(user_id):
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    user = User.query.get_or_404(user_id)
+
+    # Prevent admin from removing their own admin access
+    if user.id == current_user.id:
+        flash("You cannot change your own admin role.")
+        return redirect(url_for("admin_users"))
+
+    user.is_admin = not user.is_admin
+
+    db.session.commit()
+
+    if user.is_admin:
+        flash(f"{user.username} is now an admin.")
+    else:
+        flash(f"{user.username} is now a regular user.")
+
+    return redirect(url_for("admin_users"))
+
+@app.route("/admin/user/<int:user_id>/toggle-status", methods=["POST"])
+@login_required
+def admin_toggle_status(user_id):
+
+    # Only admins can change user status
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    user = User.query.get_or_404(user_id)
+
+    # Prevent admin from blocking their own account
+    if user.id == current_user.id:
+        flash("You cannot block your own account.")
+        return redirect(url_for("admin_users"))
+
+    # Toggle active/block status
+    user.is_active = not user.is_active
+
+    db.session.commit()
+
+    if user.is_active:
+        flash(f"{user.username} has been unblocked.")
+    else:
+        flash(f"{user.username} has been blocked.")
+
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/devices")
+@login_required
+def admin_devices():
+
+    # Check admin access
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    # Get search and filter values
+    search = request.args.get("search", "").strip()
+    status = request.args.get("status", "")
+
+    # Get current page
+    page = request.args.get(
+        "page",
+        1,
+        type=int
+    )
+
+    # Devices per page
+    per_page = 10
+
+    # Start query
+    query = Device.query
+
+    # Search by device name or Device ID
+    if search:
+        query = query.filter(
+            db.or_(
+                Device.name.ilike(f"%{search}%"),
+                Device.device_id.ilike(f"%{search}%")
+            )
+        )
+
+    # Filter by device status
+    if status == "online":
+        query = query.filter_by(
+            status="Online"
+        )
+
+    elif status == "offline":
+        query = query.filter_by(
+            status="Offline"
+        )
+
+    # Pagination
+    devices = query.order_by(
+        Device.id.desc()
+    ).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False
+    )
+
+    return render_template(
+        "admin/devices.html",
+        devices=devices,
+        search=search,
+        status=status
+    )
+
+@app.route("/admin/device/<int:device_id>/delete", methods=["POST"])
+@login_required
+def admin_delete_device(device_id):
+
+    # Only admins can delete devices
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    device = Device.query.get_or_404(device_id)
+
+    db.session.delete(device)
+    db.session.commit()
+
+    flash(f"Device '{device.name}' deleted successfully.")
+
+    return redirect(url_for("admin_devices"))
+
+@app.route("/admin/device/<int:device_id>")
+@login_required
+def admin_device_details(device_id):
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    device = Device.query.get_or_404(device_id)
+
+    latest_reading = SensorData.query.filter_by(
+        device_id=device.id
+    ).order_by(
+        SensorData.timestamp.desc()
+    ).first()
+
+    commands = DeviceCommand.query.filter_by(
+        device_id=device.id
+    ).order_by(
+        DeviceCommand.created_at.desc()
+    ).all()
+
+    return render_template(
+        "admin/device_details.html",
+        device=device,
+        latest_reading=latest_reading,
+        commands=commands
+    )
+@app.route("/admin/device/<int:device_id>/history")
+@login_required
+def admin_sensor_history(device_id):
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    device = Device.query.get_or_404(device_id)
+
+    sensor_readings = SensorData.query.filter_by(
+        device_id=device.id
+    ).order_by(
+        SensorData.timestamp.desc()
+    ).all()
+
+    return render_template(
+        "admin/history.html",
+        device=device,
+        sensor_readings=sensor_readings
+    )
+@app.route("/admin/device/<int:device_id>/charts")
+@login_required
+def admin_sensor_charts(device_id):
+
+    if not current_user.is_admin:
+        flash("Access denied.")
+        return redirect(url_for("dashboard"))
+
+    device = Device.query.get_or_404(device_id)
+
+    sensor_readings = SensorData.query.filter_by(
+        device_id=device.id
+    ).order_by(
+        SensorData.timestamp.asc()
+    ).all()
+
+    timestamps = [
+        reading.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        for reading in sensor_readings
+    ]
+
+    temperatures = [
+        reading.temperature
+        for reading in sensor_readings
+    ]
+
+    humidities = [
+        reading.humidity
+        for reading in sensor_readings
+    ]
+
+    voltages = [
+        reading.voltage
+        for reading in sensor_readings
+    ]
+
+    batteries = [
+        reading.battery
+        for reading in sensor_readings
+    ]
+
+    return render_template(
+        "admin/charts.html",
+        device=device,
+        timestamps=timestamps,
+        temperatures=temperatures,
+        humidities=humidities,
+        voltages=voltages,
+        batteries=batteries
+    )
+
+# =========================
+# ADMIN DEVICE COMMAND
+# =========================
+
+@app.route(
+    "/api/device/<int:device_id>/command",
+    methods=["POST"]
+)
 def get_device_command(device_id):
 
+    # Get JSON data safely
+    data = request.get_json(silent=True)
+
+    if not data:
+        return {
+            "success": False,
+            "message": "No JSON data received"
+        }, 400
+
+    # Get API key
+    api_key = data.get("api_key")
+
+    if not api_key:
+        return {
+            "success": False,
+            "message": "API key is required"
+        }, 401
+
+    # Find device
     device = Device.query.filter_by(
         id=device_id
-    ).first_or_404()
+    ).first()
 
+    if not device:
+        return {
+            "success": False,
+            "message": "Device not found"
+        }, 404
+
+    # Verify API key
+    if device.api_key != api_key:
+        return {
+            "success": False,
+            "message": "Invalid API key"
+        }, 403
+
+    # Get the oldest pending command
     pending_command = DeviceCommand.query.filter_by(
         device_id=device.id,
         status="Pending"
@@ -501,24 +905,27 @@ def get_device_command(device_id):
         DeviceCommand.created_at.asc()
     ).first()
 
+    # No pending command
     if not pending_command:
-
         return {
             "success": True,
             "command": None,
+            "command_id": None,
             "message": "No pending commands"
-        }
+        }, 200
 
-    pending_command.status = "Completed"
+    # Change status: Pending → Sent
+    pending_command.status = "Sent"
 
     db.session.commit()
 
+    # Send command to ESP32/device
     return {
         "success": True,
         "command": pending_command.command,
-        "command_id": pending_command.id
-    }
-
+        "command_id": pending_command.id,
+        "status": pending_command.status
+    }, 200
 # Logout
 @app.route("/logout")
 @login_required
@@ -537,5 +944,5 @@ if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
         port=port,
-        debug=False
+        debug=True
     )

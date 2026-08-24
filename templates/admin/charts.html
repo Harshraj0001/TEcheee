@@ -1,0 +1,228 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+Sensor Charts
+{% endblock %}
+
+{% block page_title %}
+Sensor Analytics
+{% endblock %}
+
+{% block content %}
+
+<div class="stat-card">
+
+    <h2>{{ device.name }}</h2>
+
+    <p>
+        Device ID:
+        <strong>{{ device.device_id }}</strong>
+    </p>
+
+</div>
+
+<br>
+
+<div class="stat-card">
+
+    <h2>Temperature</h2>
+
+    <br>
+
+    <canvas id="temperatureChart"></canvas>
+
+</div>
+
+<br>
+
+<div class="stat-card">
+
+    <h2>Humidity</h2>
+
+    <br>
+
+    <canvas id="humidityChart"></canvas>
+
+</div>
+
+<br>
+
+<div class="stat-card">
+
+    <h2>Voltage</h2>
+
+    <br>
+
+    <canvas id="voltageChart"></canvas>
+
+</div>
+
+<br>
+
+<div class="stat-card">
+
+    <h2>Battery</h2>
+
+    <br>
+
+    <canvas id="batteryChart"></canvas>
+
+</div>
+
+<br>
+
+<div class="stat-card">
+
+    <a href="{{ url_for(
+        'admin_device_details',
+        device_id=device.id
+    ) }}">
+        ← Back to Device Details
+    </a>
+
+</div>
+
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const timestamps = {{ timestamps | tojson }};
+
+const temperatures = {{ temperatures | tojson }};
+const humidities = {{ humidities | tojson }};
+const voltages = {{ voltages | tojson }};
+const batteries = {{ batteries | tojson }};
+
+
+/* =========================
+   Temperature Chart
+========================= */
+
+new Chart(
+    document.getElementById("temperatureChart"),
+    {
+        type: "line",
+
+        data: {
+            labels: timestamps,
+
+            datasets: [{
+                label: "Temperature (°C)",
+                data: temperatures,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
+    }
+);
+
+
+/* =========================
+   Humidity Chart
+========================= */
+
+new Chart(
+    document.getElementById("humidityChart"),
+    {
+        type: "line",
+
+        data: {
+            labels: timestamps,
+
+            datasets: [{
+                label: "Humidity (%)",
+                data: humidities,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    }
+);
+
+
+/* =========================
+   Voltage Chart
+========================= */
+
+new Chart(
+    document.getElementById("voltageChart"),
+    {
+        type: "line",
+
+        data: {
+            labels: timestamps,
+
+            datasets: [{
+                label: "Voltage (V)",
+                data: voltages,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true
+        }
+    }
+);
+
+
+/* =========================
+   Battery Chart
+========================= */
+
+new Chart(
+    document.getElementById("batteryChart"),
+    {
+        type: "line",
+
+        data: {
+            labels: timestamps,
+
+            datasets: [{
+                label: "Battery (%)",
+                data: batteries,
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+
+        options: {
+            responsive: true,
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    }
+);
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+Admin Dashboard
+{% endblock %}
+
+{% block page_title %}
+Dashboard Overview
+{% endblock %}
+
+{% block content %}
+
+<div class="stats-grid">
+
+    <div class="stat-card">
+        <h3>Total Users</h3>
+        <p>{{ total_users }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Total Devices</h3>
+        <p>{{ total_devices }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Online Devices</h3>
+        <p>{{ online_devices }}</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>Offline Devices</h3>
+        <p>{{ offline_devices }}</p>
+    </div>
+
+</div>
+
+<div class="stat-card">
+
+    <h2>Quick Actions</h2>
+
+    <br>
+
+    <a href="{{ url_for('admin_users') }}">
+        <button type="button">
+            Manage Users
+        </button>
+    </a>
+
+    <a href="{{ url_for('admin_devices') }}">
+        <button type="button">
+            Manage Devices
+        </button>
+    </a>
+
+</div>
+
+{% endblock %}

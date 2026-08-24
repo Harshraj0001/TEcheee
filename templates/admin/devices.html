@@ -1,0 +1,312 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+Manage Devices
+{% endblock %}
+
+{% block page_title %}
+Device Management
+{% endblock %}
+
+{% block content %}
+
+<!-- Search & Filter Section -->
+<div class="stat-card">
+
+    <h2>Search & Filter Devices</h2>
+
+    <br>
+
+    <form
+        method="GET"
+        action="{{ url_for('admin_devices') }}"
+        class="filter-form"
+    >
+
+        <!-- Search -->
+        <input
+            type="text"
+            name="search"
+            placeholder="Search device name or Device ID..."
+            value="{{ search }}"
+        >
+
+        <!-- Status Filter -->
+        <select name="status">
+
+            <option value="">
+                All Status
+            </option>
+
+            <option
+                value="online"
+                {% if status == "online" %}selected{% endif %}
+            >
+                Online
+            </option>
+
+            <option
+                value="offline"
+                {% if status == "offline" %}selected{% endif %}
+            >
+                Offline
+            </option>
+
+        </select>
+
+        <!-- Search Button -->
+        <button type="submit">
+            Search
+        </button>
+
+        <!-- Reset Button -->
+        <a href="{{ url_for('admin_devices') }}">
+            <button type="button">
+                Reset
+            </button>
+        </a>
+
+    </form>
+
+</div>
+
+<br>
+
+<!-- Devices Table -->
+<div class="stat-card">
+
+    <h2>All Registered Devices</h2>
+
+    <br>
+
+    <div style="overflow-x: auto;">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Device Name</th>
+                    <th>Device ID</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for device in devices.items %}
+
+                <tr>
+
+                    <!-- Database ID -->
+                    <td>
+                        {{ device.id }}
+                    </td>
+
+                    <!-- Device Name -->
+                    <td>
+                        {{ device.name }}
+                    </td>
+
+                    <!-- Device ID -->
+                    <td>
+                        {{ device.device_id }}
+                    </td>
+
+                    <!-- Device Type -->
+                    <td>
+                        {{ device.device_type }}
+                    </td>
+
+                    <!-- Device Status -->
+                    <td>
+
+                        {% if device.status == "Online" %}
+
+                            <span class="status-online">
+                                Online
+                            </span>
+
+                        {% else %}
+
+                            <span class="status-offline">
+                                Offline
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <!-- Device Owner -->
+                    <td>
+                        {{ device.owner.username }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td>
+
+                        <!-- View Details -->
+                        <a
+                            href="{{ url_for(
+                                'admin_device_details',
+                                device_id=device.id
+                            ) }}"
+                        >
+
+                            <button type="button">
+                                View Details
+                            </button>
+
+                        </a>
+
+
+                        <!-- Delete Device -->
+                        <form
+                            action="{{ url_for(
+                                'admin_delete_device',
+                                device_id=device.id
+                            ) }}"
+                            method="POST"
+                            style="display: inline;"
+                            onsubmit="return confirm(
+                                'Are you sure you want to delete this device?'
+                            );"
+                        >
+
+                            <button type="submit">
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="7">
+                        No devices found.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- =========================
+         Pagination
+    ========================== -->
+
+    {% if devices.pages > 1 %}
+
+    <div class="pagination">
+
+        <!-- Previous Button -->
+        {% if devices.has_prev %}
+
+        <a
+            href="{{ url_for(
+                'admin_devices',
+                page=devices.prev_num,
+                search=search,
+                status=status
+            ) }}"
+        >
+
+            <button type="button">
+                ← Previous
+            </button>
+
+        </a>
+
+        {% endif %}
+
+
+        <!-- Page Numbers -->
+        {% for page_num in devices.iter_pages() %}
+
+            {% if page_num %}
+
+                <!-- Current Page -->
+                {% if page_num == devices.page %}
+
+                    <button
+                        type="button"
+                        class="active-page"
+                    >
+                        {{ page_num }}
+                    </button>
+
+                {% else %}
+
+                    <!-- Other Pages -->
+                    <a
+                        href="{{ url_for(
+                            'admin_devices',
+                            page=page_num,
+                            search=search,
+                            status=status
+                        ) }}"
+                    >
+
+                        <button type="button">
+                            {{ page_num }}
+                        </button>
+
+                    </a>
+
+                {% endif %}
+
+            {% else %}
+
+                <!-- Dots -->
+                <span class="pagination-dots">
+                    ...
+                </span>
+
+            {% endif %}
+
+        {% endfor %}
+
+
+        <!-- Next Button -->
+        {% if devices.has_next %}
+
+        <a
+            href="{{ url_for(
+                'admin_devices',
+                page=devices.next_num,
+                search=search,
+                status=status
+            ) }}"
+        >
+
+            <button type="button">
+                Next →
+            </button>
+
+        </a>
+
+        {% endif %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

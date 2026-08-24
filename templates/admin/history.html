@@ -1,0 +1,96 @@
+{% extends "admin/base.html" %}
+
+{% block title %}
+Sensor History
+{% endblock %}
+
+{% block page_title %}
+Sensor History
+{% endblock %}
+
+{% block content %}
+
+<div class="stat-card">
+
+    <h2>{{ device.name }}</h2>
+
+    <p>
+        Device ID:
+        <strong>{{ device.device_id }}</strong>
+    </p>
+
+    <br>
+
+    {% if sensor_readings %}
+
+    <div style="overflow-x: auto;">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Temperature</th>
+                    <th>Humidity</th>
+                    <th>Voltage</th>
+                    <th>Battery</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for reading in sensor_readings %}
+
+                <tr>
+
+                    <td>{{ reading.id }}</td>
+
+                    <td>
+                        {{ reading.temperature }} °C
+                    </td>
+
+                    <td>
+                        {{ reading.humidity }} %
+                    </td>
+
+                    <td>
+                        {{ reading.voltage }} V
+                    </td>
+
+                    <td>
+                        {{ reading.battery }} %
+                    </td>
+
+                    <td>
+                        {{ reading.timestamp }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+        <p>No sensor history available for this device.</p>
+
+    {% endif %}
+
+    <br><br>
+
+    <a href="{{ url_for(
+        'admin_device_details',
+        device_id=device.id
+    ) }}">
+        ← Back to Device Details
+    </a>
+
+</div>
+
+{% endblock %}

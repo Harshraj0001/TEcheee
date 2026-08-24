@@ -1,0 +1,83 @@
+<!-- Command History -->
+<div class="stat-card">
+
+    <h2>Command History</h2>
+
+    <br>
+
+    {% if commands %}
+
+    <div style="overflow-x: auto;">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Command ID</th>
+                    <th>Command</th>
+                    <th>Status</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for command in commands %}
+
+                <tr>
+
+                    <td>
+                        {{ command.id }}
+                    </td>
+
+                    <td>
+                        {{ command.command }}
+                    </td>
+
+                    <td>
+
+                        {% if command.status == "Completed" %}
+
+                            <span class="status-online">
+                                Completed
+                            </span>
+
+                        {% elif command.status == "Pending" %}
+
+                            <strong>
+                                Pending
+                            </strong>
+
+                        {% else %}
+
+                            <span class="status-offline">
+                                {{ command.status }}
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ command.created_at }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    {% else %}
+
+        <p>No commands have been sent to this device.</p>
+
+    {% endif %}
+
+</div>
+
+<br>
