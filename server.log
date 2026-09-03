@@ -1,0 +1,105 @@
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:4000
+ * Running on http://192.168.0.130:4000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 467-543-893
+D:\MY Projects\New folder\app.py:40: SAWarning: relationship 'Device.user' will copy column user.id to column device.user_id, which conflicts with relationship(s): 'Device.owner' (copies user.id to device.user_id), 'User.devices' (copies user.id to device.user_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="devices,owner"' to the 'Device.user' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+  return db.session.get(User, int(user_id))
+192.168.0.130 - - [24/Aug/2026 01:48:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:48:26] "POST /api/sensor-data HTTP/1.1" 201 -
+192.168.0.130 - - [24/Aug/2026 01:48:41] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:48:42] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:48:47] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:48:52] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:48:57] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:02] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:07] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:12] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:17] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:18] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:18] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 01:49:18] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:18] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 01:49:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:28] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:34] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:39] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:44] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:49] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:54] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:49:59] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:50:04] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:50:09] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:50:14] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:50:19] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:50:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:51:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:52:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:53:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:54:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:55:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:56:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 01:57:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+ * Detected change in 'D:\\MY Projects\\New folder\\app.py', reloading
+ * Restarting with stat
+D:\MY Projects\New folder\app.py:40: SAWarning: relationship 'Device.user' will copy column user.id to column device.user_id, which conflicts with relationship(s): 'Device.owner' (copies user.id to device.user_id), 'User.devices' (copies user.id to device.user_id). If this is not the intention, consider if these relationships should be linked with back_populates, or if viewonly=True should be applied to one or more if they are read-only. For the less common case that foreign key constraints are partially overlapping, the orm.foreign() annotation can be used to isolate the columns that should be written towards.   To silence this warning, add the parameter 'overlaps="devices,owner"' to the 'Device.user' relationship. (Background on this warning at: https://sqlalche.me/e/20/qzyx) (This warning originated from the `configure_mappers()` process, which was invoked automatically in response to a user-initiated operation.)
+  return db.session.get(User, int(user_id))
+192.168.0.130 - - [24/Aug/2026 02:02:23] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:23] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:24] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:24] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:25] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:25] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:26] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:26] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:27] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:28] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:29] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:29] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:29] "GET /device/1 HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:29] "GET /static/css/style.css HTTP/1.1" 304 -
+192.168.0.130 - - [24/Aug/2026 02:02:35] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:40] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:45] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:50] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:02:55] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:00] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:05] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:10] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:15] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:20] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:25] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:30] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:03:35] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:04:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:05:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:06:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:07:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:08:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:09:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:10:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:11:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:12:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:13:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:14:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:15:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:16:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:17:24] "GET /api/device/1/latest HTTP/1.1" 200 -
+192.168.0.130 - - [24/Aug/2026 02:25:14] "GET /api/device/1/latest HTTP/1.1" 200 -

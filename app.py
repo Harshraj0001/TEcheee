@@ -1,7 +1,19 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_migrate import Migrate
 import secrets
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify
+)
+from flask_migrate import Migrate
 from flask_login import (
     LoginManager,
     login_user,
@@ -10,7 +22,9 @@ from flask_login import (
     current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
+from config import Config
 from models.user import db, User
 from models.device import Device
 from models.sensor_data import SensorData
@@ -18,21 +32,9 @@ from models.device_command import DeviceCommand
 
 
 app = Flask(__name__)
+app.config.from_object(Config)
 
-# Secret key for sessions and flash messages
-app.config["SECRET_KEY"] = os.environ.get(
-    "SECRET_KEY",
-    "development-secret-key"
-)
-
-# SQLite database configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL",
-    "sqlite:///iot.db"
-)
-
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+ADMIN_EMAIL = app.config.get("ADMIN_EMAIL", "harshraj72094@gmail.com")
 
 # Initialize database
 db.init_app(app)
@@ -40,16 +42,37 @@ db.init_app(app)
 # Initialize database migrations
 migrate = Migrate(app, db)
 
-
 # Initialize login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+# Serializer for password reset tokens
+serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+def generate_reset_token(email):
+    return serializer.dumps(email, salt="password-reset-salt")
+
+
+def verify_reset_token(token, max_age=1800):
+    try:
+        email = serializer.loads(
+            token,
+            salt="password-reset-salt",
+            max_age=max_age  # 30 minutes
+        )
+        return email
+    except (SignatureExpired, BadSignature):
+        return None
+
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    try:
+        return db.session.get(User, int(user_id))
+    except (ValueError, TypeError):
+        return None
 
 
 # Create database tables
@@ -66,47 +89,41 @@ def home():
 # Register page
 @app.route("/register", methods=["GET", "POST"])
 def register():
-
     if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
+        if not username or not email or not password:
+            flash("All fields are required.")
+            return redirect(url_for("register"))
 
-        # Check if username already exists
-        existing_user = User.query.filter_by(
-            username=username
-        ).first()
-
-        if existing_user:
+        # Check username
+        if User.query.filter_by(username=username).first():
             flash("Username already exists.")
             return redirect(url_for("register"))
 
-        # Check if email already exists
-        existing_email = User.query.filter_by(
-            email=email
-        ).first()
-
-        if existing_email:
+        # Check email
+        if User.query.filter_by(email=email).first():
             flash("Email already registered.")
             return redirect(url_for("register"))
 
         # Hash password
         hashed_password = generate_password_hash(password)
 
-        # Create new user
+        # Create user
         new_user = User(
             username=username,
             email=email,
-            password=hashed_password
+            password=hashed_password,
+            is_admin=(email == ADMIN_EMAIL.lower()),
+            is_active=True
         )
 
-        # Save user to database
         db.session.add(new_user)
         db.session.commit()
 
         flash("Registration successful! Please log in.")
-
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -115,40 +132,98 @@ def register():
 # Login page
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
-
-        email = request.form.get("email")
-        password = request.form.get("password")
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
         user = User.query.filter_by(email=email).first()
 
-        if user and check_password_hash(
-            user.password,
-            password
-        ):
-
-            # Make this account an admin
-            if user.email.lower() == "harshraj72094@gmail.com":
-                if not user.is_admin:
-                    user.is_admin = True
-                    db.session.commit()
-
-            login_user(user)
-
-            return redirect(url_for("dashboard"))
-
-        else:
+        if not user or not check_password_hash(user.password, password):
             flash("Invalid email or password.")
+            return render_template("login.html")
+
+        if not user.is_active:
+            flash("Your account has been blocked.")
+            return render_template("login.html")
+
+        # Grant admin privilege if email matches configured admin email
+        if user.email.lower() == ADMIN_EMAIL.lower() and not user.is_admin:
+            user.is_admin = True
+            db.session.commit()
+
+        login_user(user)
+        return redirect(url_for("dashboard"))
 
     return render_template("login.html")
+
+
+# Forgot Password page
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        if not email:
+            flash("Please enter your registered email address.")
+            return render_template("forgot_password.html")
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            # Don't leak registered accounts, but confirm submission
+            flash("If an account exists with that email, a password reset link has been created.")
+            return redirect(url_for("login"))
+
+        token = generate_reset_token(user.email)
+        reset_url = url_for("reset_password", token=token, _external=True)
+
+        # In local/demo environment without an SMTP mail server, flash the link for direct testing
+        flash(f"Password reset link generated: {reset_url}")
+        return redirect(url_for("login"))
+
+    return render_template("forgot_password.html")
+
+
+# Reset Password page
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    email = verify_reset_token(token)
+
+    if not email:
+        flash("The password reset link is invalid or has expired.")
+        return redirect(url_for("forgot_password"))
+
+    user = User.query.filter_by(email=email).first_or_404()
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not password or not confirm_password:
+            flash("All fields are required.")
+            return render_template("reset_password.html", token=token)
+
+        if password != confirm_password:
+            flash("Passwords do not match.")
+            return render_template("reset_password.html", token=token)
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters long.")
+            return render_template("reset_password.html", token=token)
+
+        user.password = generate_password_hash(password)
+        db.session.commit()
+
+        flash("Your password has been reset successfully! Please log in.")
+        return redirect(url_for("login"))
+
+    return render_template("reset_password.html", token=token)
 
 
 # Dashboard
 @app.route("/dashboard")
 @login_required
 def dashboard():
-
     devices = Device.query.filter_by(
         user_id=current_user.id
     ).all()
@@ -169,15 +244,20 @@ def dashboard():
         online_devices=online_devices,
         offline_devices=offline_devices
     )
+
+
+# Add Device
 @app.route("/add-device", methods=["GET", "POST"])
 @login_required
 def add_device():
-
     if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        device_type = request.form.get("device_type", "").strip()
+        device_id = request.form.get("device_id", "").strip()
 
-        name = request.form.get("name")
-        device_type = request.form.get("device_type")
-        device_id = request.form.get("device_id")
+        if not name or not device_type or not device_id:
+            flash("All fields are required.")
+            return redirect(url_for("add_device"))
 
         existing_device = Device.query.filter_by(
             device_id=device_id
@@ -200,14 +280,15 @@ def add_device():
         db.session.commit()
 
         flash("Device added successfully!")
-
         return redirect(url_for("devices"))
 
     return render_template("add_device.html")
+
+
+# Devices List
 @app.route("/devices")
 @login_required
 def devices():
-
     user_devices = Device.query.filter_by(
         user_id=current_user.id
     ).all()
@@ -218,16 +299,15 @@ def devices():
     )
 
 
+# Device Details
 @app.route("/device/<int:device_id>")
 @login_required
 def device_details(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
     ).first_or_404()
 
-    # Get the latest sensor reading
     latest_reading = SensorData.query.filter_by(
         device_id=device.id
     ).order_by(
@@ -241,10 +321,10 @@ def device_details(device_id):
     )
 
 
+# Toggle Device Status
 @app.route("/device/<int:device_id>/toggle")
 @login_required
 def toggle_device(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
@@ -256,6 +336,7 @@ def toggle_device(device_id):
         device.status = "Online"
 
     db.session.commit()
+    flash(f"Device status changed to {device.status}.")
 
     return redirect(
         url_for(
@@ -263,10 +344,12 @@ def toggle_device(device_id):
             device_id=device.id
         )
     )
+
+
+# Delete Device
 @app.route("/device/<int:device_id>/delete")
 @login_required
 def delete_device(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
@@ -276,13 +359,13 @@ def delete_device(device_id):
     db.session.commit()
 
     flash("Device deleted successfully.")
-
     return redirect(url_for("devices"))
+
+
 # Sensor Data History
 @app.route("/device/<int:device_id>/history")
 @login_required
 def sensor_history(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
@@ -299,25 +382,23 @@ def sensor_history(device_id):
         device=device,
         sensor_readings=sensor_readings
     )
+
+
 # Sensor Data Charts
 @app.route("/device/<int:device_id>/charts")
 @login_required
 def sensor_charts(device_id):
-
-    # Get the device belonging to the logged-in user
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
     ).first_or_404()
 
-    # Get all sensor readings in time order
     sensor_readings = SensorData.query.filter_by(
         device_id=device.id
     ).order_by(
         SensorData.timestamp.asc()
     ).all()
 
-    # Prepare data for the charts
     timestamps = [
         reading.timestamp.strftime("%Y-%m-%d %H:%M:%S")
         for reading in sensor_readings
@@ -352,11 +433,12 @@ def sensor_charts(device_id):
         voltages=voltages,
         batteries=batteries
     )
-# API to get latest sensor data
+
+
+# API to get latest sensor data (AJAX polling in UI)
 @app.route("/api/device/<int:device_id>/latest")
 @login_required
 def latest_sensor_data(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
@@ -386,11 +468,11 @@ def latest_sensor_data(device_id):
         )
     }
 
-# API to receive sensor data
+
+# API to receive sensor data (from IoT hardware)
 @app.route("/api/sensor-data", methods=["POST"])
 def receive_sensor_data():
-
-    data = request.get_json()
+    data = request.get_json(silent=True)
 
     if not data:
         return {
@@ -398,90 +480,71 @@ def receive_sensor_data():
             "message": "No JSON data received"
         }, 400
 
-
-    # Get Device ID and API Key
     device_id = data.get("device_id")
     api_key = data.get("api_key")
 
-
-    # Check required authentication data
     if not device_id or not api_key:
-
         return {
             "success": False,
             "message": "Device ID and API key are required"
         }, 401
 
-
-    # Find device
-    device = Device.query.filter_by(
-        id=device_id
-    ).first()
-
+    # Support finding by either numeric database ID or string hardware device_id
+    if isinstance(device_id, int) or (isinstance(device_id, str) and device_id.isdigit()):
+        device = Device.query.filter(
+            (Device.id == int(device_id)) | (Device.device_id == str(device_id))
+        ).first()
+    else:
+        device = Device.query.filter_by(device_id=str(device_id)).first()
 
     if not device:
-
         return {
             "success": False,
             "message": "Device not found"
         }, 404
 
-
-    # Verify API key
     if device.api_key != api_key:
-
         return {
             "success": False,
             "message": "Invalid API key"
         }, 403
 
-
-    # Save sensor data
     sensor_data = SensorData(
-
         device_id=device.id,
-
         temperature=data.get("temperature"),
-
         humidity=data.get("humidity"),
-
         voltage=data.get("voltage"),
-
         battery=data.get("battery")
     )
 
-
     db.session.add(sensor_data)
-
-
-    # Mark device as online
     device.status = "Online"
-
-
     db.session.commit()
-
 
     return {
         "success": True,
         "message": "Sensor data received successfully"
     }, 201
 
+
+# USER/WEB CONTROL: Send command to device from UI
 @app.route("/api/device/<int:device_id>/command", methods=["POST"])
 @login_required
 def send_device_command(device_id):
-
     device = Device.query.filter_by(
         id=device_id,
         user_id=current_user.id
     ).first_or_404()
 
     command = request.form.get("command")
+    if not command and request.is_json:
+        command = request.get_json().get("command")
 
     if not command:
-        return {
-            "success": False,
-            "message": "Command is required"
-        }, 400
+        if request.is_json:
+            return {"success": False, "message": "Command is required"}, 400
+        flash("Command is required.")
+        return redirect(url_for("device_details", device_id=device.id))
 
     new_command = DeviceCommand(
         device_id=device.id,
@@ -492,29 +555,91 @@ def send_device_command(device_id):
     db.session.add(new_command)
     db.session.commit()
 
+    if request.is_json:
+        return {
+            "success": True,
+            "message": "Command sent successfully",
+            "command": command
+        }
+
+    flash(f"Command '{command}' sent successfully.")
+    return redirect(url_for("device_details", device_id=device.id))
+
+
+# IOT HARDWARE: Poll pending command using API key
+@app.route("/api/device/<int:device_id>/poll-command", methods=["POST"])
+def get_device_command(device_id):
+    data = request.get_json(silent=True)
+
+    if not data:
+        return {
+            "success": False,
+            "message": "No JSON data received"
+        }, 400
+
+    api_key = data.get("api_key")
+
+    if not api_key:
+        return {
+            "success": False,
+            "message": "API key is required"
+        }, 401
+
+    device = Device.query.filter_by(id=device_id).first()
+
+    if not device:
+        return {
+            "success": False,
+            "message": "Device not found"
+        }, 404
+
+    if device.api_key != api_key:
+        return {
+            "success": False,
+            "message": "Invalid API key"
+        }, 403
+
+    pending_command = DeviceCommand.query.filter_by(
+        device_id=device.id,
+        status="Pending"
+    ).order_by(
+        DeviceCommand.created_at.asc()
+    ).first()
+
+    if not pending_command:
+        return {
+            "success": True,
+            "command": None,
+            "command_id": None,
+            "message": "No pending commands"
+        }, 200
+
+    pending_command.status = "Sent"
+    db.session.commit()
+
     return {
         "success": True,
-        "message": "Command sent successfully",
-        "command": command
-    }
+        "command": pending_command.command,
+        "command_id": pending_command.id,
+        "status": pending_command.status
+    }, 200
+
+
+# =========================
+# ADMIN PANEL ROUTES
+# =========================
 
 @app.route("/admin")
 @login_required
 def admin_dashboard():
-
-    # Allow only administrators
     if not current_user.is_admin:
         flash("Access denied. Admin privileges required.")
         return redirect(url_for("dashboard"))
 
     total_users = User.query.count()
-
     total_devices = Device.query.count()
-
-    online_devices = Device.query.filter_by(
-        status="Online"
-    ).count()
-
+    online_devices = Device.query.filter_by(status="Online").count()
+    offline_devices = total_devices - online_devices
     total_sensor_readings = SensorData.query.count()
 
     return render_template(
@@ -522,36 +647,26 @@ def admin_dashboard():
         total_users=total_users,
         total_devices=total_devices,
         online_devices=online_devices,
+        offline_devices=offline_devices,
         total_sensor_readings=total_sensor_readings
     )
+
 
 @app.route("/admin/users")
 @login_required
 def admin_users():
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
 
-    # Get search and filter values
     search = request.args.get("search", "").strip()
     role = request.args.get("role", "")
     status = request.args.get("status", "")
-
-    # Get current page
-    page = request.args.get(
-        "page",
-        1,
-        type=int
-    )
-
-    # Users per page
+    page = request.args.get("page", 1, type=int)
     per_page = 10
 
-    # Start query
     query = User.query
 
-    # Search
     if search:
         query = query.filter(
             db.or_(
@@ -560,29 +675,16 @@ def admin_users():
             )
         )
 
-    # Role filter
     if role == "admin":
-        query = query.filter_by(
-            is_admin=True
-        )
-
+        query = query.filter_by(is_admin=True)
     elif role == "user":
-        query = query.filter_by(
-            is_admin=False
-        )
+        query = query.filter_by(is_admin=False)
 
-    # Status filter
     if status == "active":
-        query = query.filter_by(
-            is_active=True
-        )
-
+        query = query.filter_by(is_active=True)
     elif status == "blocked":
-        query = query.filter_by(
-            is_active=False
-        )
+        query = query.filter_by(is_active=False)
 
-    # Pagination
     users = query.order_by(
         User.id.desc()
     ).paginate(
@@ -599,18 +701,16 @@ def admin_users():
         status=status
     )
 
-@app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 
+@app.route("/admin/user/<int:user_id>/delete", methods=["POST"])
 @login_required
 def admin_delete_user(user_id):
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
 
     user = User.query.get_or_404(user_id)
 
-    # Prevent admin from deleting their own account
     if user.id == current_user.id:
         flash("You cannot delete your own admin account.")
         return redirect(url_for("admin_users"))
@@ -619,26 +719,23 @@ def admin_delete_user(user_id):
     db.session.commit()
 
     flash("User deleted successfully.")
-
     return redirect(url_for("admin_users"))
+
 
 @app.route("/admin/user/<int:user_id>/toggle-admin", methods=["POST"])
 @login_required
 def admin_toggle_role(user_id):
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
 
     user = User.query.get_or_404(user_id)
 
-    # Prevent admin from removing their own admin access
     if user.id == current_user.id:
         flash("You cannot change your own admin role.")
         return redirect(url_for("admin_users"))
 
     user.is_admin = not user.is_admin
-
     db.session.commit()
 
     if user.is_admin:
@@ -648,25 +745,21 @@ def admin_toggle_role(user_id):
 
     return redirect(url_for("admin_users"))
 
+
 @app.route("/admin/user/<int:user_id>/toggle-status", methods=["POST"])
 @login_required
 def admin_toggle_status(user_id):
-
-    # Only admins can change user status
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
 
     user = User.query.get_or_404(user_id)
 
-    # Prevent admin from blocking their own account
     if user.id == current_user.id:
         flash("You cannot block your own account.")
         return redirect(url_for("admin_users"))
 
-    # Toggle active/block status
     user.is_active = not user.is_active
-
     db.session.commit()
 
     if user.is_active:
@@ -680,30 +773,17 @@ def admin_toggle_status(user_id):
 @app.route("/admin/devices")
 @login_required
 def admin_devices():
-
-    # Check admin access
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
 
-    # Get search and filter values
     search = request.args.get("search", "").strip()
     status = request.args.get("status", "")
-
-    # Get current page
-    page = request.args.get(
-        "page",
-        1,
-        type=int
-    )
-
-    # Devices per page
+    page = request.args.get("page", 1, type=int)
     per_page = 10
 
-    # Start query
     query = Device.query
 
-    # Search by device name or Device ID
     if search:
         query = query.filter(
             db.or_(
@@ -712,18 +792,11 @@ def admin_devices():
             )
         )
 
-    # Filter by device status
     if status == "online":
-        query = query.filter_by(
-            status="Online"
-        )
-
+        query = query.filter_by(status="Online")
     elif status == "offline":
-        query = query.filter_by(
-            status="Offline"
-        )
+        query = query.filter_by(status="Offline")
 
-    # Pagination
     devices = query.order_by(
         Device.id.desc()
     ).paginate(
@@ -739,11 +812,10 @@ def admin_devices():
         status=status
     )
 
+
 @app.route("/admin/device/<int:device_id>/delete", methods=["POST"])
 @login_required
 def admin_delete_device(device_id):
-
-    # Only admins can delete devices
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
@@ -754,13 +826,12 @@ def admin_delete_device(device_id):
     db.session.commit()
 
     flash(f"Device '{device.name}' deleted successfully.")
-
     return redirect(url_for("admin_devices"))
+
 
 @app.route("/admin/device/<int:device_id>")
 @login_required
 def admin_device_details(device_id):
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
@@ -785,10 +856,11 @@ def admin_device_details(device_id):
         latest_reading=latest_reading,
         commands=commands
     )
+
+
 @app.route("/admin/device/<int:device_id>/history")
 @login_required
 def admin_sensor_history(device_id):
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
@@ -806,10 +878,11 @@ def admin_sensor_history(device_id):
         device=device,
         sensor_readings=sensor_readings
     )
+
+
 @app.route("/admin/device/<int:device_id>/charts")
 @login_required
 def admin_sensor_charts(device_id):
-
     if not current_user.is_admin:
         flash("Access denied.")
         return redirect(url_for("dashboard"))
@@ -857,96 +930,18 @@ def admin_sensor_charts(device_id):
         batteries=batteries
     )
 
-# =========================
-# ADMIN DEVICE COMMAND
-# =========================
 
-@app.route(
-    "/api/device/<int:device_id>/command",
-    methods=["POST"]
-)
-def get_device_command(device_id):
-
-    # Get JSON data safely
-    data = request.get_json(silent=True)
-
-    if not data:
-        return {
-            "success": False,
-            "message": "No JSON data received"
-        }, 400
-
-    # Get API key
-    api_key = data.get("api_key")
-
-    if not api_key:
-        return {
-            "success": False,
-            "message": "API key is required"
-        }, 401
-
-    # Find device
-    device = Device.query.filter_by(
-        id=device_id
-    ).first()
-
-    if not device:
-        return {
-            "success": False,
-            "message": "Device not found"
-        }, 404
-
-    # Verify API key
-    if device.api_key != api_key:
-        return {
-            "success": False,
-            "message": "Invalid API key"
-        }, 403
-
-    # Get the oldest pending command
-    pending_command = DeviceCommand.query.filter_by(
-        device_id=device.id,
-        status="Pending"
-    ).order_by(
-        DeviceCommand.created_at.asc()
-    ).first()
-
-    # No pending command
-    if not pending_command:
-        return {
-            "success": True,
-            "command": None,
-            "command_id": None,
-            "message": "No pending commands"
-        }, 200
-
-    # Change status: Pending → Sent
-    pending_command.status = "Sent"
-
-    db.session.commit()
-
-    # Send command to ESP32/device
-    return {
-        "success": True,
-        "command": pending_command.command,
-        "command_id": pending_command.id,
-        "status": pending_command.status
-    }, 200
 # Logout
 @app.route("/logout")
 @login_required
 def logout():
-
     logout_user()
-
     flash("You have been logged out.")
-
     return redirect(url_for("home"))
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 4000))
-
     app.run(
         host="0.0.0.0",
         port=port,

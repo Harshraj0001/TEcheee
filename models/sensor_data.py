@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from models.user import db
 
 
@@ -37,5 +37,5 @@ class SensorData(db.Model):
 
     timestamp = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc)
     )

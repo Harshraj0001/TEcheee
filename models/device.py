@@ -41,5 +41,4 @@ class Device(db.Model):
         nullable=False
     )
 
-    # Do NOT use backref="devices"
-    user = db.relationship("User")
+    owner = db.relationship("User", back_populates="devices")

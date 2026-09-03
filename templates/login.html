@@ -67,9 +67,14 @@
                 >
 
 
-                <label>
-                    <strong>Password</strong>
-                </label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="margin: 0;">
+                        <strong>Password</strong>
+                    </label>
+                    <a href="{{ url_for('forgot_password') }}" style="font-size: 0.88em; text-decoration: none;">
+                        Forgot Password?
+                    </a>
+                </div>
 
                 <input
                     type="password"

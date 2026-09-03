@@ -39,7 +39,7 @@ class User(db.Model, UserMixin):
 
     devices = db.relationship(
         "Device",
-        backref="owner",
+        back_populates="owner",
         lazy=True,
         cascade="all, delete-orphan"
     )

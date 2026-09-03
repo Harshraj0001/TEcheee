@@ -25,6 +25,17 @@
 
         <p>View and manage all your connected devices.</p>
 
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {% if devices %}
 
             <table>
